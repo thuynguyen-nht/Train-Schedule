@@ -22,7 +22,8 @@ var start = "";
 var frequency = "";
 var hour = "";
 var minute = "";
-var schedule = [];
+var nextTrain = "";
+
 
 $(function () {
     $("#hour-input").keydown(function () {
@@ -66,12 +67,13 @@ $("#submit").on("click", function (event) {
     hour = $("#hour-input").val().trim();
     minute = $("#minute-input").val().trim();
 
-    start = hour + ":" + minute;
-
+    start = moment((hour + ":" + minute), "HH:mm").format("X");
+    console.log(start)
 
     frequency = $("#freq-input").val().trim();
 
-    console.log(start);
+    var momentOfTime = moment().unix();
+    console.log(momentOfTime);
 
     //b. push to firebase
     database.ref().push({
@@ -83,6 +85,7 @@ $("#submit").on("click", function (event) {
 
 });
 
+
 //get back data from firebase, update to DOM
 database.ref().on("child_added", function (childSnapshot) {
 
@@ -92,15 +95,17 @@ database.ref().on("child_added", function (childSnapshot) {
     var trainLine = childSnapshot.val().trainLine;
     var destination = childSnapshot.val().destination;
     var startTime = childSnapshot.val().startTime;
+    console.log(startTime)
     var frequency = childSnapshot.val().frequency;
 
-    // var nextTrain = 
+    //get the time in moment to compare with the startTime. 
+    //Note that you have to specify the format of startTime so moment() can follow the format.
+    var timeLeft = moment().diff(moment(startTime, "X"), "minutes") % frequency;
+    console.log(timeLeft)
 
+    var minuteAway = frequency - timeLeft;
 
-
-
-
-
+    var nextArrival = moment().add(minuteAway, "minutes").format("HH:mm A")
 
 
     // Create the new row
@@ -108,8 +113,8 @@ database.ref().on("child_added", function (childSnapshot) {
         $("<td>").text(trainLine),
         $("<td>").text(destination),
         $("<td>").text(frequency),
-        $("<td>").text(),
-        $("<td>").text(),
+        $("<td>").text(nextArrival),
+        $("<td>").text(minuteAway),
     );
 
     // Append the new row to the table
